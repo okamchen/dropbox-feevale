@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
+
+import br.feevale.builder.ProtocolBuilder;
 
 public class Client {
 
@@ -15,21 +18,15 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
         client.connect();
+               
+        
+        System.out.println("Enter your username: ");
+        Scanner scanner = new Scanner(System.in);
+        String username = scanner.nextLine();
+        
+        client.sendMessage(new ProtocolBuilder("user", username).getJson());
         
         client.receiveMessage();
-        
-        BufferedReader key = new BufferedReader(new InputStreamReader(System.in));
-        System.out.print("Enter your name:");
-        
-        client.sendMessage(System.console().readLine());
-        
-        try {
-            while (true) {
-                client.sendMessage(key.readLine());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
     }
 

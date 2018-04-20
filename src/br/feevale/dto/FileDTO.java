@@ -1,4 +1,4 @@
-package br.feevale.server.dto;
+package br.feevale.dto;
 
 public class FileDTO {
 	
