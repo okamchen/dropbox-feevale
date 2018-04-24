@@ -1,41 +1,35 @@
 package br.feevale.server.business;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.util.List;
 
-import br.feevale.builder.ProtocolBuilder;
-import br.feevale.dto.FileDTO;
+import br.feevale.dto.ProtocolDTO;
 
 public class User implements Runnable {
 	
-	private Socket socket;
-	private EventEmiter event;
+	private String userName;
 	
-	private String name;
-	private List<FileDTO> files;
+	private ObjectInputStream in;
+	private ObjectOutputStream out;
 	
-	private BufferedReader in;
-	private PrintWriter out;
+	private EventServerManipulateFile eventUser;
 	
-	public User(Socket socket, EventEmiter event) {
+	public User(Socket socket, EventServerManipulateFile eventUser) {
 		try {
-			this.socket = socket;
-			this.event = event;
+			this.eventUser = eventUser;
 			
-			this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-			this.out = new PrintWriter(this.socket.getOutputStream());
+			this.in = new ObjectInputStream(socket.getInputStream());
+			this.out = new ObjectOutputStream(socket.getOutputStream());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-    public void sendMessage(String msg){
+    public void sendMessage(ProtocolDTO msg){
         try {
-            out.println(msg);
+            out.writeObject(msg);
             out.flush();
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,31 +38,43 @@ public class User implements Runnable {
 
 	@Override
 	public void run() {
-		String msg;
+		listen();		
+	}
+
+	private void listen() {
+		ProtocolDTO msg;
         try {
-        	while ((msg = in.readLine()) != null) {
-                buildName(msg);
-                buildFile(msg);
-                event.execute(name, msg);
+        	while ((msg = (ProtocolDTO) in.readObject()) != null) {
+        		
+        		if(msg.isInstanceUser()) {
+        			userName = msg.getUserName();
+        			System.out.println("Create Instance User: ".concat(userName));
+        		}
+        		
+        		if(msg.isCraete()) {
+        			eventUser.createFile(msg);
+        			System.out.println("Create File of User: ".concat(userName));
+        		}
+        		
+        		if(msg.isUpdate()) {
+        			eventUser.updateFile(msg);
+        			System.out.println("Update File of User: ".concat(userName));
+        		}
+        		
+        		if(msg.isDelete()) {
+        			eventUser.deleteFile(msg);
+        			System.out.println("Delete File of User: ".concat(userName));
+        		}
+        		
+        		
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }		
+        }
 	}
 
-	private void buildFile(String msg) {
-		// TODO Implements
-	}
-
-	private void buildName(String msg) {
-		ProtocolBuilder protocol = new ProtocolBuilder(msg).getObj();
-		if("user".equals(protocol.getKey())){
-			name = protocol.getValue();
-		}
-	}
-
-	public String getName() {
-		return name;
+	public String getUserName() {
+		return userName;
 	}
 
 }
