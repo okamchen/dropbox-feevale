@@ -1,8 +1,10 @@
 package br.feevale.server.business;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 
 import br.feevale.dto.ProtocolDTO;
@@ -11,8 +13,8 @@ public class User implements Runnable {
 	
 	private String userName;
 	
-	private ObjectInputStream in;
-	private ObjectOutputStream out;
+	private InputStream in;
+	private OutputStream out;
 	
 	private EventServerManipulateFile eventUser;
 	
@@ -20,8 +22,8 @@ public class User implements Runnable {
 		try {
 			this.eventUser = eventUser;
 			
-			this.in = new ObjectInputStream(socket.getInputStream());
-			this.out = new ObjectOutputStream(socket.getOutputStream());
+			this.in = socket.getInputStream();
+			this.out = socket.getOutputStream();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -29,8 +31,9 @@ public class User implements Runnable {
 
     public void sendMessage(ProtocolDTO msg){
         try {
-            out.writeObject(msg);
-            out.flush();
+        	ObjectOutputStream objOut = new ObjectOutputStream(out);
+			objOut.writeObject(msg);
+        	objOut.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -44,14 +47,14 @@ public class User implements Runnable {
 	private void listen() {
 		ProtocolDTO msg;
         try {
-        	while ((msg = (ProtocolDTO) in.readObject()) != null) {
+        	while ((msg = (ProtocolDTO) new ObjectInputStream(in).readObject()) != null) {
         		
         		if(msg.isInstanceUser()) {
         			userName = msg.getUserName();
         			System.out.println("Create Instance User: ".concat(userName));
         		}
         		
-        		if(msg.isCraete()) {
+        		if(msg.isCreate()) {
         			eventUser.createFile(msg);
         			System.out.println("Create File of User: ".concat(userName));
         		}
@@ -65,7 +68,6 @@ public class User implements Runnable {
         			eventUser.deleteFile(msg);
         			System.out.println("Delete File of User: ".concat(userName));
         		}
-        		
         		
             }
         } catch (Exception e) {

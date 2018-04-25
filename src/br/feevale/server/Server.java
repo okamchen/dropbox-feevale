@@ -1,6 +1,5 @@
 package br.feevale.server;
 
-import java.io.File;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;

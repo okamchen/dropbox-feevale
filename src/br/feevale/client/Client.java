@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -56,7 +57,7 @@ public class Client {
 	                        
 	                        watchKey.pollEvents().stream().forEach(event -> {
                             	Path filePath = (Path) event.context();
-								byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
+                            	byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
 								sendMessage(new ProtocolDTO(username, bytes, EnumCommand.CREATE));
 	                            
 	                        });
@@ -132,8 +133,7 @@ public class Client {
 	                        
 	                        watchKey.pollEvents().stream().forEach(event -> {
 	                        	Path filePath = (Path) event.context();
-								byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
-								sendMessage(new ProtocolDTO(username, bytes, EnumCommand.DELETE));
+								sendMessage(new ProtocolDTO(username, filePath.toString()));
 	                            
 	                        });
 	                    }
