@@ -22,9 +22,10 @@ public class ProtocolDTO implements Serializable {
 		this.cmd = EnumCommand.DELETE;
 	}
 	
-	public ProtocolDTO(String userName, byte[] bytes, EnumCommand cmd) {
+	public ProtocolDTO(String userName, byte[] bytes, String fileName, EnumCommand cmd) {
 		this.userName = userName;
 		this.bytes = bytes;
+		this.fileName = fileName;
 		this.cmd = cmd;
 	}
 	

@@ -1,10 +1,11 @@
 package br.feevale.client;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -21,8 +22,8 @@ public class Client {
 
     private Socket socket;
     
-    private ObjectInputStream in;
-	private ObjectOutputStream out;
+    private InputStream in;
+	private OutputStream out;
 
 	private String username;
 
@@ -58,7 +59,7 @@ public class Client {
 	                        watchKey.pollEvents().stream().forEach(event -> {
                             	Path filePath = (Path) event.context();
                             	byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
-								sendMessage(new ProtocolDTO(username, bytes, EnumCommand.CREATE));
+								sendMessage(new ProtocolDTO(username, bytes, filePath.toString(), EnumCommand.CREATE));
 	                            
 	                        });
 	                    }
@@ -96,7 +97,7 @@ public class Client {
 	                        watchKey.pollEvents().stream().forEach(event -> {
 	                        	Path filePath = (Path) event.context();
 								byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
-								sendMessage(new ProtocolDTO(username, bytes, EnumCommand.UPDATE));
+								sendMessage(new ProtocolDTO(username, bytes, filePath.toString(), EnumCommand.UPDATE));
 	                        });
 	                    }
 	                    
@@ -167,6 +168,8 @@ public class Client {
     private void connect() {
         try {
             socket = new Socket("localhost", 8080);
+            out = socket.getOutputStream();
+            in = socket.getInputStream();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -174,9 +177,9 @@ public class Client {
 
     private void sendMessage(ProtocolDTO msg) {
         try {
-        	out = new ObjectOutputStream(socket.getOutputStream());
-			out.writeObject(msg);
-			out.flush();
+        	ObjectOutputStream outObj = new ObjectOutputStream(out);
+        	outObj.writeObject(msg);
+        	outObj.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -189,13 +192,18 @@ public class Client {
             	ProtocolDTO msg;
             	
             	try {
-            		in = new ObjectInputStream(socket.getInputStream());
-					while ((msg = (ProtocolDTO) in.readObject()) != null) {
-					    try {
-					        System.out.println(msg);
-					    } catch (Exception e) {
-					        e.printStackTrace();
-					    }
+					while ((msg = (ProtocolDTO) new ObjectInputStream(in).readObject()) != null) {
+		        		if(msg.isCreate()) {
+		        			createFile(msg);
+		        		}
+		        		
+		        		if(msg.isUpdate()) {
+		        			updateFile(msg);
+		        		}
+		        		
+		        		if(msg.isDelete()) {
+		        			deleteFile(msg);
+		        		}
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -203,6 +211,29 @@ public class Client {
 					e.printStackTrace();
 				}
             }
+
+			private void deleteFile(ProtocolDTO msg) {
+				Path path = getPath(msg);
+				FileUtils.deleteFile(path);
+				System.out.println("CLIENT: Delete " + msg.getFileName() + " File on Client");
+			}
+
+
+			private void updateFile(ProtocolDTO msg) {
+				Path path = getPath(msg);
+				FileUtils.updateFile(path, msg.getBytes());
+				System.out.println("CLIENT: Update " + msg.getFileName() + " File on Client");
+			}
+
+			private void createFile(ProtocolDTO msg) {
+				Path path = getPath(msg);
+				FileUtils.createFile(path, msg.getBytes());
+				System.out.println("CLIENT: Create " + msg.getFileName() + " File on Client");
+			}
+			
+			private Path getPath(ProtocolDTO msg) {
+				return Paths.get(pathClient.toString().concat("/").concat(msg.getFileName()));
+			}
 
         }.start();
     }

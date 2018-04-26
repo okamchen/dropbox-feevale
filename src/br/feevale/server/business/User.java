@@ -51,22 +51,23 @@ public class User implements Runnable {
         		
         		if(msg.isInstanceUser()) {
         			userName = msg.getUserName();
-        			System.out.println("Create Instance User: ".concat(userName));
+        			eventUser.sincronizePathWithUserInstance(msg);
+        			System.out.println("SERVER: Create Instance User: ".concat(userName));
         		}
         		
         		if(msg.isCreate()) {
         			eventUser.createFile(msg);
-        			System.out.println("Create File of User: ".concat(userName));
+        			System.out.println("SERVER: Create File of User: ".concat(userName));
         		}
         		
         		if(msg.isUpdate()) {
         			eventUser.updateFile(msg);
-        			System.out.println("Update File of User: ".concat(userName));
+        			System.out.println("SERVER: Update File of User: ".concat(userName));
         		}
         		
         		if(msg.isDelete()) {
         			eventUser.deleteFile(msg);
-        			System.out.println("Delete File of User: ".concat(userName));
+        			System.out.println("SERVER: Delete File of User: ".concat(userName));
         		}
         		
             }
