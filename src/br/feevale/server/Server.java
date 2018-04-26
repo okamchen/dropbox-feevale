@@ -64,11 +64,11 @@ public class Server implements Runnable, EventServerManipulateFile {
 	}
 
 	private Path getPath(ProtocolDTO msg) {
-		return Paths.get(ROOT_PATH.concat(msg.getFileName()));
+		return Paths.get(ROOT_PATH + msg.getFileName());
 	}
 
 	@Override
-	public void sincronizePathWithUserInstance(ProtocolDTO msg) {
+	public void sincronizePathWithClient(ProtocolDTO msg) {
 		for(User user : users) {
 			if (user.getUserName().equals(msg.getUserName())) {
 				File folder = new File(ROOT_PATH);
@@ -76,10 +76,8 @@ public class Server implements Runnable, EventServerManipulateFile {
 
 				for (File file : listOfFiles) {
 				    if (file.isFile()) {
-				        System.out.println("SERVER: " + file.getName());
-				        
-				        byte[] bytes = FileUtils.readBytesFromFile(file.getName());
-				        user.sendMessage(new ProtocolDTO(msg.getUserName(), bytes, file.toString(), EnumCommand.CREATE));
+				        byte[] bytes = FileUtils.readBytesFromFile(ROOT_PATH + file.getName());
+				        user.sendMessage(new ProtocolDTO(msg.getUserName(), bytes, file.getName(), EnumCommand.CREATE));
 				    }
 				} 
 			}

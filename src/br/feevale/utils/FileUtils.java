@@ -26,8 +26,9 @@ public class FileUtils {
 	}
 
 	public static void updateFile(Path path, byte[] bytes) {
+		byte[] byteCopy = bytes.clone();
 		deleteFile(path);
-		createFile(path, bytes);
+		createFile(path, byteCopy);
 	}
 
 	public static void deleteFile(Path path) {

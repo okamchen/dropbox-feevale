@@ -51,7 +51,7 @@ public class User implements Runnable {
         		
         		if(msg.isInstanceUser()) {
         			userName = msg.getUserName();
-        			eventUser.sincronizePathWithUserInstance(msg);
+        			eventUser.sincronizePathWithClient(msg);
         			System.out.println("SERVER: Create Instance User: ".concat(userName));
         		}
         		

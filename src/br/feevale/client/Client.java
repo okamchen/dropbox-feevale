@@ -1,5 +1,6 @@
 package br.feevale.client;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -58,9 +59,8 @@ public class Client {
 	                        
 	                        watchKey.pollEvents().stream().forEach(event -> {
                             	Path filePath = (Path) event.context();
-                            	byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
-								sendMessage(new ProtocolDTO(username, bytes, filePath.toString(), EnumCommand.CREATE));
-	                            
+                        		byte[] bytes = FileUtils.readBytesFromFile(pathClient + "/" + filePath.toString());
+                        		sendMessage(new ProtocolDTO(username, bytes, filePath.toString(), EnumCommand.CREATE));
 	                        });
 	                    }
 	                    
@@ -227,14 +227,28 @@ public class Client {
 
 			private void createFile(ProtocolDTO msg) {
 				Path path = getPath(msg);
-				FileUtils.createFile(path, msg.getBytes());
-				System.out.println("CLIENT: Create " + msg.getFileName() + " File on Client");
+				if(!isThereFile(msg.getFileName())) {
+					FileUtils.createFile(path, msg.getBytes());
+					System.out.println("CLIENT: Create " + msg.getFileName() + " File on Client");
+				}
 			}
 			
 			private Path getPath(ProtocolDTO msg) {
-				return Paths.get(pathClient.toString().concat("/").concat(msg.getFileName()));
+				return Paths.get(pathClient.toString()+ "/" + msg.getFileName());
 			}
 
         }.start();
     }
+
+	private boolean isThereFile(String fileName) {
+		File folder = new File(pathClient.toString());
+		File[] listOfFiles = folder.listFiles();
+
+		for (File file : listOfFiles) {
+		    if (file.isFile() && file.getName().equals(fileName)) {
+		    	return true;
+		    }
+		}
+		return false;
+	}
 }
